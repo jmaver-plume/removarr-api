@@ -1,32 +1,26 @@
-use crate::{db, settings, voters};
+use crate::{settings, voters};
 use axum::routing::{delete, patch, post, put};
 use axum::{Router, routing::get};
-use rusqlite::Connection;
+use migration::{Migrator, MigratorTrait};
+use sea_orm::{Database, DatabaseConnection};
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: db::Db,
+    pub db: DatabaseConnection,
 }
 
-pub fn create_app() -> Router {
-    create_app_with_db("/tmp/removarr.db")
-}
+pub async fn create_app() -> Router {
+    // Setup db connection
+    let db: DatabaseConnection = Database::connect("sqlite:///tmp/removarr.sqlite?mode=rwc")
+        .await
+        .expect("Failed to connect to database");
+    Migrator::up(&db, None).await.expect("Failed to migrate database");
 
-pub fn create_app_with_db(db_path: &str) -> Router {
-    let connection = Connection::open(db_path).unwrap();
-    let state = AppState {
-        db: db::Db::new(connection),
-    };
+    // Setup state
+    let state = AppState { db };
 
-    // Initialize schemas
-    state
-        .db
-        .initialize_schemas()
-        .expect("Failed to initialized db schemas");
-    println!("Initialized schemas.");
-
-    // Start HTTP server
-    Router::new()
+    // Create router
+    let router = Router::new()
         .route("/api/settings", get(settings::get::handler))
         .route("/api/settings", put(settings::put::handler))
         .route("/api/voters", post(voters::post::handler))
@@ -34,5 +28,6 @@ pub fn create_app_with_db(db_path: &str) -> Router {
         .route("/api/voters/{id}", get(voters::get::handler))
         .route("/api/voters/{id}", delete(voters::delete::handler))
         .route("/api/voters/{id}", patch(voters::patch::handler))
-        .with_state(state)
+        .with_state(state);
+    router
 }

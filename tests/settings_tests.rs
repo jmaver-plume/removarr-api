@@ -5,7 +5,7 @@ use tower::ServiceExt;
 
 #[tokio::test]
 async fn test_settings_full_workflow() {
-    let app = create_app();
+    let app = create_app().await;
 
     // PUT - Create/update settings
     let put_response = app

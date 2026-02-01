@@ -5,7 +5,7 @@ use tower::ServiceExt;
 
 #[tokio::test]
 async fn test_voters_full_workflow() {
-    let app = create_app();
+    let app = create_app().await;
 
     // POST - Create a voter
     let post_response = app

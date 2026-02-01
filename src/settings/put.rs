@@ -1,9 +1,11 @@
 use crate::app::AppState;
-use crate::db::{Settings, SettingsConfig, SettingsCredentials};
-use crate::error::AppError;
+use crate::entity::settings;
+use crate::entity::settings::Entity as Settings;
 use axum::Json;
 use axum::extract::State;
 use axum::response::IntoResponse;
+use http::StatusCode;
+use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
@@ -30,21 +32,31 @@ pub struct Credentials {
 pub async fn handler(
     State(state): State<AppState>,
     Json(payload): Json<Request>,
-) -> Result<impl IntoResponse, AppError> {
-    let settings = Settings {
-        sonarr: SettingsConfig {
-            api_key: payload.sonarr.api_key,
-            url: payload.sonarr.url,
-        },
-        radarr: SettingsConfig {
-            api_key: payload.radarr.api_key,
-            url: payload.radarr.url,
-        },
-        credentials: SettingsCredentials {
-            username: payload.credentials.username,
-            password: payload.credentials.password,
-        },
-    };
-    let unwrapped = state.db.set_settings(&settings)?;
-    Ok(unwrapped)
+) -> Result<impl IntoResponse, StatusCode> {
+    let data = serde_json::to_string(&payload).unwrap();
+
+    let settings: Option<settings::Model> = Settings::find_by_id(1)
+        .one(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if let Some(settings) = settings {
+        let mut settings: settings::ActiveModel = settings.into();
+        settings.data = Set(data);
+        settings
+            .update(&state.db)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        Ok(())
+    } else {
+        let settings = settings::ActiveModel {
+            id: Set(1),
+            data: Set(data),
+        };
+        settings
+            .insert(&state.db)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        Ok(())
+    }
 }

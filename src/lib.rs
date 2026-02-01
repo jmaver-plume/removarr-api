@@ -1,6 +1,5 @@
 pub mod app;
-mod db;
-mod error;
+mod entity;
 mod settings;
 mod voters;
 mod webhooks;
