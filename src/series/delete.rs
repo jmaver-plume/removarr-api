@@ -1,10 +1,13 @@
 use crate::app::AppState;
 use crate::entity::series;
 use crate::entity::series::Entity as Series;
+use crate::entity::voter::Entity as Voter;
+use crate::entity::vote_series;
+use crate::entity::vote_series::Entity as VoteSeries;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use http::StatusCode;
-use sea_orm::EntityTrait;
+use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, PaginatorTrait};
 use sea_orm::entity::ModelTrait;
 
 #[axum_macros::debug_handler]
@@ -17,6 +20,25 @@ pub async fn handler(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
+    
+    // Count total voters
+    let total_voters = Voter::find()
+        .count(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    
+    // Count votes for this series
+    let votes_for_series = VoteSeries::find()
+        .filter(vote_series::Column::SeriesId.eq(id))
+        .count(&state.db)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    
+    // Verify all voters have voted for deletion
+    if votes_for_series < total_voters {
+        return Err(StatusCode::FORBIDDEN);
+    }
+    
     series
         .delete(&state.db)
         .await
