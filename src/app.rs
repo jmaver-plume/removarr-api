@@ -2,6 +2,7 @@ use crate::settings;
 use crate::voters;
 use crate::series;
 use crate::movies;
+use crate::webhooks;
 use axum::routing::{delete, patch, post, put};
 use axum::{Router, routing::get};
 use migration::{Migrator, MigratorTrait};
@@ -35,6 +36,8 @@ pub async fn create_app() -> Router {
         .route("/api/series/{id}", delete(series::delete::handler))
         .route("/api/movies", get(movies::list::handler))
         .route("/api/movies/{id}", delete(movies::delete::handler))
+        .route("/webhooks/sonarr", post(webhooks::sonarr::handler))
+        .route("/webhooks/radarr", post(webhooks::radarr::handler))
         .with_state(state);
     router
 }
