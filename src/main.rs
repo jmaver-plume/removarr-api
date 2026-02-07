@@ -6,6 +6,8 @@ mod entity;
 mod series;
 mod movies;
 mod auth;
+mod votes_series;
+mod votes_movie;
 
 #[tokio::main]
 async fn main() {

@@ -4,6 +4,8 @@ use crate::series;
 use crate::movies;
 use crate::webhooks;
 use crate::auth;
+use crate::votes_series;
+use crate::votes_movie;
 use axum::routing::{delete, patch, post, put};
 use axum::{Router, routing::get, middleware};
 use migration::{Migrator, MigratorTrait};
@@ -40,6 +42,12 @@ pub async fn create_app() -> Router {
         .route("/api/series/{id}", delete(series::delete::handler))
         .route("/api/movies", get(movies::list::handler))
         .route("/api/movies/{id}", delete(movies::delete::handler))
+        .route("/api/votes/series", post(votes_series::post::handler))
+        .route("/api/votes/series", get(votes_series::list::handler))
+        .route("/api/votes/series", delete(votes_series::delete::handler))
+        .route("/api/votes/movies", post(votes_movie::post::handler))
+        .route("/api/votes/movies", get(votes_movie::list::handler))
+        .route("/api/votes/movies", delete(votes_movie::delete::handler))
         .route("/api/auth/reset-password", post(auth::reset_password::handler))
         .route("/api/auth/logout", post(auth::logout::handler))
         .route_layer(middleware::from_fn_with_state(

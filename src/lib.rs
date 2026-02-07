@@ -6,3 +6,5 @@ mod webhooks;
 pub mod series;
 pub mod movies;
 pub mod auth;
+pub mod votes_series;
+pub mod votes_movie;
