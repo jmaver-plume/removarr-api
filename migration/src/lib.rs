@@ -6,6 +6,8 @@ mod m20260201_160257_create_series_table;
 mod m20260201_160258_create_movies_table;
 mod m20260207_190000_create_vote_series_table;
 mod m20260207_190001_create_vote_movie_table;
+mod m20260207_192000_create_admin_table;
+mod m20260207_192001_create_refresh_token_table;
 
 pub struct Migrator;
 
@@ -19,6 +21,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260201_160258_create_movies_table::Migration),
             Box::new(m20260207_190000_create_vote_series_table::Migration),
             Box::new(m20260207_190001_create_vote_movie_table::Migration),
+            Box::new(m20260207_192000_create_admin_table::Migration),
+            Box::new(m20260207_192001_create_refresh_token_table::Migration),
         ]
     }
 }

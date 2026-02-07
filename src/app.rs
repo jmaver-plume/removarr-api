@@ -3,8 +3,9 @@ use crate::voters;
 use crate::series;
 use crate::movies;
 use crate::webhooks;
+use crate::auth;
 use axum::routing::{delete, patch, post, put};
-use axum::{Router, routing::get};
+use axum::{Router, routing::get, middleware};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 
@@ -20,11 +21,14 @@ pub async fn create_app() -> Router {
         .expect("Failed to connect to database");
     Migrator::up(&db, None).await.expect("Failed to migrate database");
 
+    // Initialize admin user if needed
+    auth::initialize_admin(&db).await;
+
     // Setup state
     let state = AppState { db };
 
-    // Create router
-    let router = Router::new()
+    // Protected routes (require JWT)
+    let protected_routes = Router::new()
         .route("/api/settings", get(settings::get::handler))
         .route("/api/settings", put(settings::put::handler))
         .route("/api/voters", post(voters::post::handler))
@@ -36,8 +40,22 @@ pub async fn create_app() -> Router {
         .route("/api/series/{id}", delete(series::delete::handler))
         .route("/api/movies", get(movies::list::handler))
         .route("/api/movies/{id}", delete(movies::delete::handler))
+        .route("/api/auth/reset-password", post(auth::reset_password::handler))
+        .route("/api/auth/logout", post(auth::logout::handler))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            auth::middleware::auth_middleware,
+        ));
+
+    // Public routes (no JWT required)
+    let public_routes = Router::new()
+        .route("/api/auth/login", post(auth::login::handler))
         .route("/webhooks/sonarr", post(webhooks::sonarr::handler))
-        .route("/webhooks/radarr", post(webhooks::radarr::handler))
-        .with_state(state);
-    router
+        .route("/webhooks/radarr", post(webhooks::radarr::handler));
+
+    // Combine routes
+    Router::new()
+        .merge(protected_routes)
+        .merge(public_routes)
+        .with_state(state)
 }

@@ -5,3 +5,4 @@ pub mod voters;
 mod webhooks;
 pub mod series;
 pub mod movies;
+pub mod auth;

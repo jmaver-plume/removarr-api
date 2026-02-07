@@ -5,6 +5,7 @@ mod webhooks;
 mod entity;
 mod series;
 mod movies;
+mod auth;
 
 #[tokio::main]
 async fn main() {
