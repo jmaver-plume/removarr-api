@@ -6,14 +6,17 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::{ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
+#[schema(as = CreateMovieVoteRequest)]
 pub struct Request {
     voter_id: i32,
     movie_id: i32,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
+#[schema(as = CreateMovieVoteResponse)]
 pub struct Response {
     id: i32,
     voter_id: i32,
@@ -32,6 +35,20 @@ impl From<vote_movie::Model> for Response {
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/votes/movies",
+    tag = "Votes",
+    operation_id = "votes_movies_create",
+    request_body = Request,
+    security(("jwt" = [])),
+    responses(
+        (status = 200, description = "Vote created successfully", body = Response),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 409, description = "Conflict - vote already exists for this voter and movie (unique constraint violation)"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Json(payload): Json<Request>,

@@ -1,13 +1,4 @@
-mod app;
-mod settings;
-mod voters;
-mod webhooks;
-mod entity;
-mod series;
-mod movies;
-mod auth;
-mod votes_series;
-mod votes_movie;
+use removarr_rust::app;
 
 #[tokio::main]
 async fn main() {

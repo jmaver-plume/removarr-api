@@ -6,10 +6,13 @@ use crate::webhooks;
 use crate::auth;
 use crate::votes_series;
 use crate::votes_movie;
+use crate::openapi::ApiDoc;
 use axum::routing::{delete, patch, post, put};
 use axum::{Router, routing::get, middleware};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -50,6 +53,7 @@ pub async fn create_app() -> Router {
         .route("/api/votes/movies", delete(votes_movie::delete::handler))
         .route("/api/auth/reset-password", post(auth::reset_password::handler))
         .route("/api/auth/logout", post(auth::logout::handler))
+        .merge(SwaggerUi::new("/api/docs").url("/api/openapi.json", ApiDoc::openapi()))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             auth::middleware::auth_middleware,

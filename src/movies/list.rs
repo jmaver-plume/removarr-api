@@ -7,8 +7,10 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
+#[schema(as = MovieResponse)]
 pub struct Response {
     id: i32,
     external_id: i32,
@@ -38,6 +40,18 @@ impl From<movie::Model> for Response {
 }
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/api/movies",
+    tag = "Movies",
+    operation_id = "movies_list",
+    security(("jwt" = [])),
+    responses(
+        (status = 200, description = "List of all movies", body = Vec<Response>),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(State(state): State<AppState>) -> Result<impl IntoResponse, StatusCode> {
     let movies: Vec<movie::Model> = Movie::find()
         .all(&state.db)

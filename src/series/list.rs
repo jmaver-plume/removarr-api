@@ -7,8 +7,10 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
+#[schema(as = SeriesResponse)]
 pub struct Response {
     id: i32,
     external_id: i32,
@@ -38,6 +40,18 @@ impl From<series::Model> for Response {
 }
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/api/series",
+    tag = "Series",
+    operation_id = "series_list",
+    security(("jwt" = [])),
+    responses(
+        (status = 200, description = "List of all series", body = Vec<Response>),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(State(state): State<AppState>) -> Result<impl IntoResponse, StatusCode> {
     let series_list: Vec<series::Model> = Series::find()
         .all(&state.db)

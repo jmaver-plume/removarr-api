@@ -11,6 +11,23 @@ use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, PaginatorTrait};
 use sea_orm::entity::ModelTrait;
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    delete,
+    path = "/api/series/{id}",
+    tag = "Series",
+    operation_id = "series_delete",
+    security(("jwt" = [])),
+    params(
+        ("id" = i32, Path, description = "Series ID")
+    ),
+    responses(
+        (status = 204, description = "Series deleted successfully"),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 403, description = "Forbidden - not all voters have voted for deletion of this series"),
+        (status = 404, description = "Series not found - no series exists with the given ID"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Path(id): Path<i32>,

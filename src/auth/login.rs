@@ -7,19 +7,34 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
+#[schema(as = LoginRequest)]
 pub struct Request {
     username: String,
     password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
+#[schema(as = LoginResponse)]
 pub struct Response {
     access_token: String,
     refresh_token: String,
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/login",
+    tag = "Authentication",
+    operation_id = "auth_login",
+    request_body = Request,
+    responses(
+        (status = 200, description = "Login successful", body = Response),
+        (status = 401, description = "Invalid credentials - username or password is incorrect"),
+        (status = 500, description = "Internal server error - database or password hashing error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Json(payload): Json<Request>,

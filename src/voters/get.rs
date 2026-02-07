@@ -7,8 +7,10 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::EntityTrait;
 use serde::Serialize;
+use utoipa::ToSchema;
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
+#[schema(as = VoterResponse)]
 pub struct Response {
     id: i32,
     name: String,
@@ -24,6 +26,22 @@ impl From<voter::Model> for Response {
 }
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    get,
+    path = "/api/voters/{id}",
+    tag = "Voters",
+    operation_id = "voters_get",
+    security(("jwt" = [])),
+    params(
+        ("id" = i32, Path, description = "Voter ID")
+    ),
+    responses(
+        (status = 200, description = "Voter found", body = Response),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 404, description = "Voter not found - no voter exists with the given ID"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Path(id): Path<i32>,

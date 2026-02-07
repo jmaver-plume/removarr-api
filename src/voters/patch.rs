@@ -7,13 +7,32 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::{ActiveModelTrait, EntityTrait, Set};
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
+#[schema(as = UpdateVoterRequest)]
 pub struct Request {
     name: String,
 }
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    patch,
+    path = "/api/voters/{id}",
+    tag = "Voters",
+    operation_id = "voters_update",
+    request_body = Request,
+    security(("jwt" = [])),
+    params(
+        ("id" = i32, Path, description = "Voter ID")
+    ),
+    responses(
+        (status = 204, description = "Voter updated successfully"),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 404, description = "Voter not found - no voter exists with the given ID"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Path(id): Path<i32>,

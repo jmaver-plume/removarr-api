@@ -9,20 +9,35 @@ use axum::response::IntoResponse;
 use axum::Json;
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Serialize)]
-pub(crate) struct Response {
-    success: bool,
+#[derive(Serialize, ToSchema)]
+#[schema(as = RadarrWebhookResponse)]
+pub struct Response {
+    pub success: bool,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct WebhookPayload {
-    event_type: String,
-    movie: Option<serde_json::Value>,
+#[schema(as = RadarrWebhookPayload)]
+pub struct WebhookPayload {
+    pub event_type: String,
+    pub movie: Option<serde_json::Value>,
 }
 
 #[axum_macros::debug_handler]
+#[utoipa::path(
+    post,
+    path = "/webhooks/radarr",
+    tag = "Webhooks",
+    operation_id = "webhook_radarr",
+    request_body = WebhookPayload,
+    responses(
+        (status = 200, description = "Webhook processed successfully", body = Response),
+        (status = 400, description = "Bad request - invalid webhook payload format"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Json(payload): Json<WebhookPayload>,

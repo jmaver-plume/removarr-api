@@ -7,8 +7,10 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, ToSchema)]
+#[schema(as = SeriesVoteResponse)]
 pub struct Response {
     id: i32,
     voter_id: i32,
@@ -27,6 +29,18 @@ impl From<vote_series::Model> for Response {
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/votes/series",
+    tag = "Votes",
+    operation_id = "votes_series_list",
+    security(("jwt" = [])),
+    responses(
+        (status = 200, description = "List of all series votes", body = Vec<Response>),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token"),
+        (status = 500, description = "Internal server error - database error")
+    )
+)]
 pub async fn handler(State(state): State<AppState>) -> Result<impl IntoResponse, StatusCode> {
     let votes: Vec<vote_series::Model> = VoteSeries::find()
         .all(&state.db)

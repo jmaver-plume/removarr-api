@@ -7,18 +7,35 @@ use axum::Json;
 use http::StatusCode;
 use sea_orm::{EntityTrait, ActiveModelTrait, Set};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
+#[schema(as = ResetPasswordRequest)]
 pub struct Request {
     current_password: String,
     new_password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
+#[schema(as = ResetPasswordResponse)]
 pub struct Response {
     success: bool,
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/auth/reset-password",
+    tag = "Authentication",
+    operation_id = "auth_reset_password",
+    request_body = Request,
+    security(("jwt" = [])),
+    responses(
+        (status = 200, description = "Password reset successful", body = Response),
+        (status = 401, description = "Unauthorized - invalid or missing JWT token, or current password is incorrect"),
+        (status = 404, description = "Admin user not found"),
+        (status = 500, description = "Internal server error - database or password hashing error")
+    )
+)]
 pub async fn handler(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
