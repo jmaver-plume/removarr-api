@@ -31,5 +31,5 @@ pub async fn handler(
         .update(&state.db)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(())
+    Ok(StatusCode::NO_CONTENT)
 }

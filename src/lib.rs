@@ -1,5 +1,7 @@
 pub mod app;
 mod entity;
-mod settings;
-mod voters;
+pub mod settings;
+pub mod voters;
 mod webhooks;
+pub mod series;
+pub mod movies;

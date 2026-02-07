@@ -3,6 +3,8 @@ mod settings;
 mod voters;
 mod webhooks;
 mod entity;
+mod series;
+mod movies;
 
 #[tokio::main]
 async fn main() {

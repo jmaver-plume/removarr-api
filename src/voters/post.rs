@@ -15,11 +15,15 @@ pub struct Request {
 #[derive(Serialize)]
 pub struct Response {
     id: i32,
+    name: String,
 }
 
 impl From<voter::Model> for Response {
     fn from(value: voter::Model) -> Self {
-        Self { id: value.id }
+        Self {
+            id: value.id,
+            name: value.name,
+        }
     }
 }
 

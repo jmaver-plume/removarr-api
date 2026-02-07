@@ -9,17 +9,17 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Series::Table)
+                    .table(Movie::Table)
                     .if_not_exists()
-                    .col(pk_auto(Series::Id))
-                    .col(integer(Series::ExternalId).not_null())
-                    .col(string_null(Series::Title))
-                    .col(string_null(Series::TitleSlug))
-                    .col(integer_null(Series::Year))
-                    .col(string_null(Series::Overview))
-                    .col(string_null(Series::PosterUrl))
-                    .col(boolean_null(Series::Downloaded))
-                    .col(timestamp_null(Series::AddedAt))
+                    .col(pk_auto(Movie::Id))
+                    .col(integer(Movie::ExternalId).not_null())
+                    .col(string_null(Movie::Title))
+                    .col(string_null(Movie::TitleSlug))
+                    .col(integer_null(Movie::Year))
+                    .col(string_null(Movie::Overview))
+                    .col(string_null(Movie::PosterUrl))
+                    .col(boolean_null(Movie::Downloaded))
+                    .col(timestamp_null(Movie::AddedAt))
                     .to_owned(),
             )
             .await
@@ -27,13 +27,13 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Series::Table).to_owned())
+            .drop_table(Table::drop().table(Movie::Table).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-enum Series {
+enum Movie {
     Table,
     Id,
     ExternalId,

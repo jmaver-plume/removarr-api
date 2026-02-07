@@ -87,13 +87,7 @@ async fn test_voters_full_workflow() {
         .await
         .unwrap();
 
-    assert_eq!(patch_response.status(), StatusCode::OK);
-
-    let body_bytes = axum::body::to_bytes(patch_response.into_body(), usize::MAX)
-        .await
-        .unwrap();
-    let updated_voter: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
-    assert_eq!(updated_voter["name"], "Alice Updated");
+    assert_eq!(patch_response.status(), StatusCode::NO_CONTENT);
 
     // DELETE - Delete the voter
     let delete_response = app

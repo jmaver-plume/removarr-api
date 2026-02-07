@@ -1,4 +1,7 @@
-use crate::{settings, voters};
+use crate::settings;
+use crate::voters;
+use crate::series;
+use crate::movies;
 use axum::routing::{delete, patch, post, put};
 use axum::{Router, routing::get};
 use migration::{Migrator, MigratorTrait};
@@ -28,6 +31,10 @@ pub async fn create_app() -> Router {
         .route("/api/voters/{id}", get(voters::get::handler))
         .route("/api/voters/{id}", delete(voters::delete::handler))
         .route("/api/voters/{id}", patch(voters::patch::handler))
+        .route("/api/series", get(series::list::handler))
+        .route("/api/series/{id}", delete(series::delete::handler))
+        .route("/api/movies", get(movies::list::handler))
+        .route("/api/movies/{id}", delete(movies::delete::handler))
         .with_state(state);
     router
 }
